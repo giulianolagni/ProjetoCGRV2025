@@ -1,0 +1,22 @@
+# Pastas geradas pelo Unity
+Library/
+Logs/
+Temp/
+UserSettings/
+
+# Pasta de configuração do editor
+.vscode/
+
+# Pastas de Build (quando você gerar o jogo)
+Build/
+Builds/
+
+# Arquivos de solução do Visual Studio / Unity
+*.sln
+*.slnx
+
+# Arquivos de metadados e build do Visual Studio
+*.csproj
+*.user
+*.suo
+*.tmp
