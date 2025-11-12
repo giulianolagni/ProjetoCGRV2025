@@ -33,14 +33,6 @@ public class TiroSimples : MonoBehaviour
         velocidadeFinal += velocidadeExtra;
     }
 
-<<<<<<< HEAD
-    void OnTriggerEnter(Collider other)
-    {
-         // Adiciona aqui tags para ignorar se necessário (ex: não se destruir na própria nave)
-         // if (other.CompareTag("Player")) return;
-         
-         Destroy(gameObject);
-=======
 void OnTriggerEnter(Collider other)
     {
         // Se acertar num objeto com a tag "Inimigo"
@@ -58,6 +50,5 @@ void OnTriggerEnter(Collider other)
         
         // NOTA: Se o asteroide destruir o tiro, mas o tiro não destruir o asteroide,
         // verifica se aplicaste a tag "Inimigo" corretamente no Passo 1!
->>>>>>> master
     }
 }
