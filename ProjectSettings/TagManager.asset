@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Inimigo
+  - TiroDoPlayer
   layers:
   - Default
   - TransparentFX
