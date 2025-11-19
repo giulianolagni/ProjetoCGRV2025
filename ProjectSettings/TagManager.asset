@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Inimigo
   - TiroDoPlayer
+  - Enemy
   layers:
   - Default
   - TransparentFX
