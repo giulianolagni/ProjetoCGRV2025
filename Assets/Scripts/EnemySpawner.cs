@@ -1,65 +1,64 @@
-// C# (Unity)
 using UnityEngine;
-using System.Collections; // Precisa deste para Coroutines!
 
 public class SpawnManager : MonoBehaviour
 {
+    [Header("Configuração")]
     public GameObject prefabDoInimigo;
-    public int navesParaSpawnar = 5;
-    public float tempoEntreSpawns = 0.5f; // Meio segundo entre cada nave
+    public int totalDeInimigos = 5;
+    public float raioDeSpawn = 50f; 
 
-    [Header("Área de Spawn")]
-    [Tooltip("A largura total da formação. Ex: 40 significa de -20 a +20.")]
-    public float larguraDaFormacao = 40f; 
-    public float posY = 0.0f;
-    public float posZ = 20.0f;
+    private GameObject inimigoAtivo;
+    private int inimigosSpawnados = 0;
+    private Transform player;
 
     void Start()
     {
-        StartCoroutine(SpawnaEsquadrao());
+        GameObject objPlayer = GameObject.FindGameObjectWithTag("Player");
+        if (objPlayer != null) player = objPlayer.transform;
     }
 
-    // Esta é a Coroutine.
-    IEnumerator SpawnaEsquadrao()
+    void Update()
     {
-        // Loop que roda 5 vezes (passando o 'i' de 0 a 4)
-        for (int i = 0; i < navesParaSpawnar; i++)
-        {
-            // 1. Chama a nossa função de criar UM inimigo,
-            // dizendo a ele qual é o seu "número na fila" (o 'i')
-            SpawnaInimigo(i);
+        if (player == null) return;
+        if (inimigosSpawnados >= totalDeInimigos) return;
 
-            // 2. Pausa este script
-            yield return new WaitForSeconds(tempoEntreSpawns);
+        if (inimigoAtivo == null)
+        {
+            SpawnarProximoInimigo();
         }
     }
 
-    // --- MUDANÇA PRINCIPAL AQUI ---
-    // Agora esta função recebe o 'i' (número da nave)
-    void SpawnaInimigo(int i)
+    void SpawnarProximoInimigo()
     {
-        // Se temos menos de 2 naves, não divide por zero
-        if (navesParaSpawnar <= 1)
+        // 1. Gera posição 2D
+        Vector2 circuloAleatorio = Random.insideUnitCircle.normalized * raioDeSpawn;
+
+        // 2. Força BRUTA no Y: Pega o Y exato do Player
+        float yDoPlayer = player.position.y;
+        
+        // Monta a posição final manualmente
+        Vector3 posicaoFinal = new Vector3(
+            player.position.x + circuloAleatorio.x, 
+            yDoPlayer, // Y IDÊNTICO
+            player.position.z + circuloAleatorio.y
+        );
+
+        // 3. Cria o inimigo
+        inimigoAtivo = Instantiate(prefabDoInimigo, posicaoFinal, Quaternion.identity);
+        
+        // 4. Debug para provar que nasceu certo (Olhe no Console!)
+        Debug.Log($"Spawn Y: {posicaoFinal.y} | Player Y: {yDoPlayer} (Devem ser iguais)");
+
+        // Faz olhar pro player
+        inimigoAtivo.transform.LookAt(player);
+        
+        // GARANTIA EXTRA: Zera a velocidade vertical se ele tiver Rigidbody
+        Rigidbody rbInimigo = inimigoAtivo.GetComponent<Rigidbody>();
+        if(rbInimigo != null)
         {
-            Vector3 posCentro = new Vector3(0, posY, posZ);
-            Instantiate(prefabDoInimigo, posCentro, Quaternion.Euler(0, 180, 0));
-            return;
+            rbInimigo.linearVelocity = Vector3.zero; // Para Unity 6 (ou .velocity em antigos)
         }
 
-        // 1. Calcula o espaço entre as naves
-        // Ex: Largura de 40 / (5 - 1) naves = 10 unidades de espaço
-        float espacamento = larguraDaFormacao / (navesParaSpawnar - 1);
-
-        // 2. Calcula a posição X desta nave
-        // Ex (i=0): -(40 / 2) + (0 * 10) = -20
-        // Ex (i=1): -(40 / 2) + (1 * 10) = -10
-        // Ex (i=4): -(40 / 2) + (4 * 10) = +20
-        float posX = -(larguraDaFormacao / 2) + (i * espacamento);
-
-        // 3. Define a posição final
-        Vector3 posicaoDeSpawn = new Vector3(posX, posY, posZ);
-
-        // 4. Cria a nave
-        Instantiate(prefabDoInimigo, posicaoDeSpawn, Quaternion.Euler(0, 180, 0));
+        inimigosSpawnados++;
     }
 }

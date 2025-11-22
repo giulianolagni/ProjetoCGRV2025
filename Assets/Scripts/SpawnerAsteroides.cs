@@ -1,54 +1,62 @@
+// using System.Collections;
+// using UnityEngine;
 
-using System.Collections;
-using UnityEngine;
-
-public class SpawnerAsteroides : MonoBehaviour
-{
-    [Header("--- CONFIGURAÇÃO ---")]
-    public GameObject prefabAsteroide; // Arrasta o teu Prefab "Asteroide" aqui
-    public Transform alvo; // Arrasta a tua Nave (Jogador) aqui
+// public class SpawnerAsteroides : MonoBehaviour
+// {
+//     [Header("--- CONFIGURAÇÃO ---")]
+//     public GameObject prefabAsteroide; 
+//     public Transform alvo; 
     
-    public float intervaloSpawn = 1.5f; // Tempo entre cada asteroide
-    public float raioSpawn = 800f; // Distância a que eles aparecem da nave
+//     [Header("Densidade")]
+//     public float intervaloSpawn = 0.1f; 
+//     public float raioSpawn = 200f; 
 
-    void Start()
-    {
-        // Se não arrastaste a nave, tenta encontrá-la pela tag
-        if (alvo == null)
-        {
-            // Certifica-te que a tua nave tem a tag "Player"
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                alvo = player.transform;
-            }
-        }
+//     [Header("Tamanho dos Asteroides")]
+//     [Tooltip("Tamanho mínimo. Aumente se estiver muito pequeno.")]
+//     public float escalaMinima = 10f; 
+//     [Tooltip("Tamanho máximo.")]
+//     public float escalaMaxima = 30f;
 
-        // Inicia a rotina de spawn
-        if (prefabAsteroide != null && alvo != null)
-        {
-            StartCoroutine(RotinaDeSpawn());
-        }
-        else
-        {
-            Debug.LogError("Spawner: Prefab ou Alvo (Nave) não definidos!");
-        }
-    }
+//     [Header("Performance")]
+//     public float tempoDeVida = 30f;
 
-    IEnumerator RotinaDeSpawn()
-    {
-        // Loop infinito
-        while (true)
-        {
-            // 1. Espera pelo tempo definido
-            yield return new WaitForSeconds(intervaloSpawn);
+//     void Start()
+//     {
+//         if (alvo == null)
+//         {
+//             GameObject player = GameObject.FindGameObjectWithTag("Player");
+//             if (player != null) alvo = player.transform;
+//         }
 
-            // 2. Calcula uma posição aleatória num círculo à volta da nave
-            // (Random.onUnitSphere dá um ponto numa esfera de raio 1)
-            Vector3 posAleatoria = (Random.onUnitSphere * raioSpawn) + alvo.position;
-            
-            // 3. Cria (Instancia) o asteroide nessa posição
-            Instantiate(prefabAsteroide, posAleatoria, Random.rotation);
-        }
-    }
-}
+//         if (prefabAsteroide != null)
+//         {
+//             StartCoroutine(RotinaDeSpawn());
+//         }
+//     }
+
+//     IEnumerator RotinaDeSpawn()
+//     {
+//         while (true)
+//         {
+//             yield return new WaitForSeconds(intervaloSpawn);
+
+//             if (alvo != null)
+//             {
+//                 Vector3 posAleatoria = Random.onUnitSphere * raioSpawn;
+//                 Vector3 posFinal = alvo.position + posAleatoria;
+                
+//                 GameObject asteroide = Instantiate(prefabAsteroide, posFinal, Random.rotation);
+
+//                 // --- AQUI ESTÁ A CORREÇÃO ---
+//                 // Agora usamos os valores que você colocar no Inspector
+//                 float tamanhoSorteado = Random.Range(escalaMinima, escalaMaxima);
+//                 asteroide.transform.localScale = Vector3.one * tamanhoSorteado;
+
+//                 if (tempoDeVida > 0)
+//                 {
+//                     Destroy(asteroide, tempoDeVida);
+//                 }
+//             }
+//         }
+//     }
+// }

@@ -1,176 +1,265 @@
 using UnityEngine;
+using UnityEngine.SceneManagement; // Necessário para reiniciar a cena
 
 public class ArcadeNave_VFinal : MonoBehaviour
 {
-    [Header("--- VELOCIDADE (CONFIG WT) ---")]
+    [Header("--- VELOCIDADE ---")]
     [SerializeField] private float velocidadeCruzeiro = 100f;
     [SerializeField] private float velocidadeTurbo = 1300f;
     [SerializeField] private float velocidadeRe = -100f;
     [SerializeField] private float tempoDeAceleracao = 2.5f;
     private float velocidadeVelocity;
 
-    [Header("--- CURVAS (MANCHE) ---")]
+    [Header("--- CONTROLES ---")]
     [SerializeField] private float velocidadeGiroPitchYaw = 80f;
     [SerializeField] private float velocidadeRoll = 200f;
     [SerializeField] private float forcaAutoBanking = 5f;
     [SerializeField] private float tempoParaNivelar = 4f;
-
-    [Header("--- RATO (MIRA WT) ---")]
     [SerializeField] private float limiteRato = 350f;
-    [SerializeField] private float deadzone = 15f;
     [SerializeField] private float sensibilidadeRato = 1f;
 
-    [Header("--- COMBATE (NOVO) ---")]
-    [Tooltip("Arrasta aqui um objeto vazio posicionado no bico da nave (opcional)")]
+    [Header("--- COMBATE ---")]
     [SerializeField] private Transform pontoDeTiro;
+    [SerializeField] private float vidaMaxima = 100f;
+    [SerializeField] private GameObject telaGameOver; 
+    
+    [Header("--- MISSÃO (FRAGMENTOS) ---")]
+    public int fragmentosTotais = 5;
+    public RotaManager rotaManager; // ARRASTE O GERENCIADOR AQUI
+    private int fragmentosColetados = 0;
+    
+    // Variável para impedir contagem dupla (Cooldown de coleta)
+    private float tempoUltimaColeta = 0f;
 
-    [Header("--- EFEITOS VISUAIS ---")]
+    [Header("--- VISUAL & AUDIO ---")]
     [SerializeField] private Camera camaraPrincipal;
+    [SerializeField] private AudioSource motorAudioSource;
     [SerializeField] private float fovNormal = 60f;
     [SerializeField] private float fovTurbo = 85f;
-
-    [Header("--- ÁUDIO ---")]
-    [SerializeField] private AudioSource motorAudioSource;
-    [SerializeField] private float pitchMinimo = 0.8f;
-    [SerializeField] private float pitchTurbo = 3.5f;
-
+    
     private Rigidbody rb;
     private float velocidadeAtual;
     private Vector2 posicaoMira;
     private float tempoSemInput = 0f;
+    private float vidaAtual;
+    
+    // Estados do Jogo
+    private bool estaMorto = false;
+    private bool jogoPausado = false; // Usado na vitória para esconder o HUD
+    
+    public float VidaAtualPublica => vidaAtual; 
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-        rb.linearDamping = 1f;
+        rb.linearDamping = 1f; 
         rb.angularDamping = 4f;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        
         velocidadeAtual = velocidadeCruzeiro;
+        vidaAtual = vidaMaxima;
+        estaMorto = false;
+        jogoPausado = false;
+        fragmentosColetados = 0;
+
+        Time.timeScale = 1f; 
+        if(telaGameOver != null) telaGameOver.SetActive(false);
 
         if (camaraPrincipal == null) camaraPrincipal = Camera.main;
         if (camaraPrincipal != null) fovNormal = camaraPrincipal.fieldOfView;
-
-        // Se não definiste um ponto de tiro, usa a própria posição da nave
         if (pontoDeTiro == null) pontoDeTiro = this.transform;
     }
 
     void Update()
     {
-        // 1. INPUTS
-        bool temInputRoll = Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f;
-        bool temInputMira = posicaoMira.magnitude > deadzone;
-        if (temInputRoll || temInputMira) tempoSemInput = 0f;
-        else tempoSemInput += Time.deltaTime;
+        if (estaMorto) return;
 
-        // 2. MIRA (MOUSE AIM)
+        // INPUTS
+        bool temInput = posicaoMira.magnitude > 15f || Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f;
+        if (temInput) tempoSemInput = 0f; else tempoSemInput += Time.deltaTime;
+
         posicaoMira.x += Input.GetAxis("Mouse X") * sensibilidadeRato * limiteRato * 0.1f;
         posicaoMira.y += Input.GetAxis("Mouse Y") * sensibilidadeRato * limiteRato * 0.1f;
         posicaoMira = Vector2.ClampMagnitude(posicaoMira, limiteRato);
-        if (!temInputMira) posicaoMira = Vector2.Lerp(posicaoMira, Vector2.zero, Time.deltaTime * 5f);
+        if (!temInput) posicaoMira = Vector2.Lerp(posicaoMira, Vector2.zero, Time.deltaTime * 5f);
+        
+        float alvo = Input.GetKey(KeyCode.W) ? velocidadeTurbo : (Input.GetKey(KeyCode.S) ? (velocidadeAtual > 10 ? 0 : velocidadeRe) : velocidadeCruzeiro);
+        velocidadeAtual = Mathf.SmoothDamp(velocidadeAtual, alvo, ref velocidadeVelocity, tempoDeAceleracao);
 
-        // 3. VELOCIDADE
-        float alvoVelocidade = velocidadeCruzeiro;
-        if (Input.GetKey(KeyCode.W)) alvoVelocidade = velocidadeTurbo;
-        else if (Input.GetKey(KeyCode.S)) alvoVelocidade = (velocidadeAtual > 10f) ? 0f : velocidadeRe;
-        velocidadeAtual = Mathf.SmoothDamp(velocidadeAtual, alvoVelocidade, ref velocidadeVelocity, tempoDeAceleracao);
-
-        // 4. ÁUDIO V10
-        if (motorAudioSource != null)
+        // AUDIO
+        if (motorAudioSource != null && !jogoPausado)
         {
-            float targetPitch = pitchMinimo;
-            if (velocidadeAtual >= 0)
-            {
-                float ratio = Mathf.InverseLerp(0, velocidadeTurbo, velocidadeAtual);
-                targetPitch = Mathf.Lerp(pitchMinimo, pitchTurbo, Mathf.Pow(ratio, 1.5f));
-            }
-            else
-            {
-                float ratioRe = Mathf.InverseLerp(0, velocidadeRe, velocidadeAtual);
-                targetPitch = Mathf.Lerp(pitchMinimo, pitchMinimo * 1.2f, ratioRe);
-            }
-            motorAudioSource.pitch = Mathf.Lerp(motorAudioSource.pitch, targetPitch, Time.deltaTime * 3f);
+            float pitch = velocidadeAtual >= 0 ? Mathf.Lerp(0.8f, 3.5f, Mathf.Pow(velocidadeAtual/velocidadeTurbo, 1.5f)) : 0.8f;
+            motorAudioSource.pitch = Mathf.Lerp(motorAudioSource.pitch, pitch, Time.deltaTime * 3f);
         }
 
-        // 5. FOV
+        // FOV
         if (camaraPrincipal != null)
         {
-            float percentagemVelocidade = Mathf.InverseLerp(0, velocidadeTurbo, velocidadeAtual);
-            camaraPrincipal.fieldOfView = Mathf.Lerp(camaraPrincipal.fieldOfView, Mathf.Lerp(fovNormal, fovTurbo, percentagemVelocidade), Time.deltaTime * 2f);
+            float fovAlvo = Mathf.Lerp(fovNormal, fovTurbo, velocidadeAtual/velocidadeTurbo);
+            camaraPrincipal.fieldOfView = Mathf.Lerp(camaraPrincipal.fieldOfView, fovAlvo, Time.deltaTime * 2f);
         }
     }
 
     void FixedUpdate()
     {
-        rb.linearVelocity = transform.forward * velocidadeAtual;
+        if (estaMorto) return;
 
-        Vector2 inputManche = posicaoMira / limiteRato;
-        float pitch = -inputManche.y * velocidadeGiroPitchYaw * Time.fixedDeltaTime;
-        float yaw = inputManche.x * velocidadeGiroPitchYaw * Time.fixedDeltaTime;
-        float rollManual = -Input.GetAxis("Horizontal") * velocidadeRoll * Time.fixedDeltaTime;
-        float autoBank = -inputManche.x * forcaAutoBanking * Time.fixedDeltaTime;
+        // MOVIMENTO
+        // SE DER ERRO VERMELHO NO UNITY ANTIGO, TROQUE 'linearVelocity' POR 'velocity'
+        rb.linearVelocity = transform.forward * velocidadeAtual; 
 
-        transform.Rotate(Vector3.right * pitch, Space.Self);
-        transform.Rotate(Vector3.up * yaw, Space.Self);
-        transform.Rotate(Vector3.forward * (rollManual + autoBank), Space.Self);
+        Vector2 input = posicaoMira / limiteRato;
+        transform.Rotate(Vector3.right * (-input.y * velocidadeGiroPitchYaw * Time.fixedDeltaTime), Space.Self);
+        transform.Rotate(Vector3.up * (input.x * velocidadeGiroPitchYaw * Time.fixedDeltaTime), Space.Self);
+        
+        float roll = -Input.GetAxis("Horizontal") * velocidadeRoll * Time.fixedDeltaTime;
+        float autoBank = -input.x * forcaAutoBanking * Time.fixedDeltaTime;
+        transform.Rotate(Vector3.forward * (roll + autoBank), Space.Self);
 
         if (tempoSemInput >= tempoParaNivelar)
         {
-             Vector3 euler = transform.localEulerAngles;
-             float zAtual = (euler.z > 180) ? euler.z - 360 : euler.z;
-             transform.localEulerAngles = new Vector3(euler.x, euler.y, Mathf.Lerp(zAtual, 0, Time.fixedDeltaTime));
+             Vector3 e = transform.localEulerAngles;
+             float z = (e.z > 180) ? e.z - 360 : e.z;
+             transform.localEulerAngles = new Vector3(e.x, e.y, Mathf.Lerp(z, 0, Time.fixedDeltaTime));
         }
     }
 
-void OnGUI()
+    // --- COMBATE E VIDA ---
+    public void TomarDano(float dano)
     {
-        // Se houver algum erro grave, não faz nada para não travar o jogo
-        if (camaraPrincipal == null) return;
+        if (estaMorto || jogoPausado) return;
+        vidaAtual -= dano;
+        if (vidaAtual <= 0) GameOver();
+    }
 
-        float centroX = Screen.width / 2f;
-        float centroY = Screen.height / 2f;
+    void GameOver()
+    {
+        estaMorto = true;
+        if (telaGameOver != null) telaGameOver.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        Time.timeScale = 0f;
+    }
+    
+    // --- Chamado pelo RotaManager na Vitória ---
+    public void DesativarSistemas()
+    {
+        jogoPausado = true; // Isso vai esconder o HUD no OnGUI
+        
+        // Desliga som
+        if (motorAudioSource != null)
+        {
+            motorAudioSource.Stop();
+            motorAudioSource.volume = 0;
+        }
 
-        // --- MIRA REALISTA (BORESIGHT) ---
-        // Só tenta desenhar se tivermos um ponto de tiro definido
+        // Para a nave
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+    }
+
+    public void ReiniciarJogo()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    // --- COLETA E MISSÃO ---
+    public void ColetarFragmento()
+    {
+        // Trava de tempo para evitar contagem dupla no mesmo frame
+        if (Time.time < tempoUltimaColeta + 0.1f) return;
+        tempoUltimaColeta = Time.time;
+
+        fragmentosColetados++;
+        Debug.Log($"FRAGMENTO: {fragmentosColetados}/{fragmentosTotais}");
+
+        if (fragmentosColetados >= fragmentosTotais)
+        {
+            // AVISA O MANAGER E PASSA A POSIÇÃO DO PLAYER (this.transform)
+            if (rotaManager != null)
+            {
+                rotaManager.IniciarRotaDeFuga(this.transform);
+            }
+            else
+            {
+                Debug.LogError("ROTA MANAGER NÃO ESTÁ CONECTADO NO INSPECTOR DA NAVE!");
+            }
+        }
+    }
+
+    // --- COLISÕES E GATILHOS ---
+    void OnCollisionEnter(Collision c) 
+    { 
+        if(c.relativeVelocity.magnitude > 5) TomarDano(c.relativeVelocity.magnitude * 0.5f); 
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        // Se bater no anel do checkpoint
+        if (other.CompareTag("Checkpoint") && rotaManager != null)
+        {
+            rotaManager.CheckpointAlcancado(other.gameObject);
+        }
+    }
+
+    // --- HUD (Modo Clássico) ---
+    void OnGUI()
+    {
+        // Se morreu OU ganhou o jogo (pausado), esconde tudo para limpar a tela
+        if (estaMorto || jogoPausado || camaraPrincipal == null) return;
+
+        float cx = Screen.width / 2f;
+        float cy = Screen.height / 2f;
+
+        // --- MIRA CENTRAL (+) ---
         if (pontoDeTiro != null)
         {
-            Vector3 posicaoAlvoReal = pontoDeTiro.position + (pontoDeTiro.forward * 1000f);
-            Vector3 miraNoEcra = camaraPrincipal.WorldToScreenPoint(posicaoAlvoReal);
-
-            // Verifica se está na frente da câmera
-            if (miraNoEcra.z > 0)
+            Vector3 posReal = pontoDeTiro.position + (pontoDeTiro.forward * 1000f);
+            Vector3 miraTela = camaraPrincipal.WorldToScreenPoint(posReal);
+            
+            if (miraTela.z > 0)
             {
-                GUI.color = new Color(1, 1, 1, 0.9f);
-                // Inverte Y porque o GUI começa do topo, mas o ScreenPoint começa de baixo
-                GUI.Label(new Rect(miraNoEcra.x - 10, Screen.height - miraNoEcra.y - 10, 20, 20), "+");
+                // AGORA: MESMA COR DA MIRA DO MOUSE (Branca Transparente)
+                GUI.color = new Color(1, 1, 1, 0.5f); 
+                GUI.Label(new Rect(miraTela.x - 10, Screen.height - miraTela.y - 10, 20, 20), "+");
             }
         }
 
-        // --- MOUSE AIM (Círculo Flutuante) ---
+        // --- MIRA DO MOUSE (O) ---
         GUI.color = new Color(1, 1, 1, 0.5f);
-        GUI.Label(new Rect(centroX + posicaoMira.x - 10, centroY - posicaoMira.y - 10, 20, 20), "O");
+        GUI.Label(new Rect(cx + posicaoMira.x - 10, cy - posicaoMira.y - 10, 20, 20), "O");
 
-        // --- HUD VELOCIDADE ---
-        GUI.color = new Color(0, 0, 0, 0.5f);
+        // --- RESTO DO HUD ---
+        
+        // Velocidade
+        GUI.color = Color.black;
         GUI.DrawTexture(new Rect(20, 20, 160, 60), Texture2D.whiteTexture);
-        
         GUI.color = Color.white;
-        // Verifica se GUI.skin não é nulo antes de usar (raro falhar, mas possível)
-        if (GUI.skin != null)
-        {
-            GUI.skin.label.fontSize = 16;
-            GUI.skin.label.fontStyle = FontStyle.Bold;
-        }
-        GUI.Label(new Rect(30, 25, 150, 30), $"SPD: {velocidadeAtual:F0} km/h");
+        if (GUI.skin != null) { GUI.skin.label.fontSize = 16; GUI.skin.label.fontStyle = FontStyle.Bold; }
+        GUI.Label(new Rect(30, 25, 150, 30), $"SPD: {velocidadeAtual:F0}");
+        float pctSpd = Mathf.InverseLerp(velocidadeRe, velocidadeTurbo, velocidadeAtual);
+        GUI.DrawTexture(new Rect(30, 55, 140 * pctSpd, 10), Texture2D.whiteTexture);
 
-        float pctThrottle = Mathf.InverseLerp(velocidadeRe, velocidadeTurbo, velocidadeAtual);
-        GUI.color = Color.Lerp(Color.grey, Color.green, pctThrottle);
-        if(velocidadeAtual > velocidadeTurbo * 0.9f) GUI.color = Color.red;
-        
-        GUI.DrawTexture(new Rect(30, 55, 140 * pctThrottle, 15), Texture2D.whiteTexture);
+        // Vida
+        GUI.color = Color.black;
+        GUI.DrawTexture(new Rect(20, 90, 160, 40), Texture2D.whiteTexture);
+        float pctVida = vidaAtual / vidaMaxima;
+        GUI.color = Color.Lerp(Color.red, Color.green, pctVida);
+        GUI.DrawTexture(new Rect(30, 100, 140 * pctVida, 20), Texture2D.whiteTexture);
         GUI.color = Color.white;
+        if (GUI.skin != null) GUI.skin.label.fontSize = 14;
+        GUI.Label(new Rect(35, 100, 140, 20), $"HP: {vidaAtual:F0}");
+
+        // Fragmentos
+        GUI.color = Color.black;
+        GUI.DrawTexture(new Rect(20, 140, 200, 30), Texture2D.whiteTexture);
+        GUI.color = Color.yellow;
+        GUI.Label(new Rect(30, 145, 190, 20), $"MAPA: {fragmentosColetados} / {fragmentosTotais}");
     }
 }
