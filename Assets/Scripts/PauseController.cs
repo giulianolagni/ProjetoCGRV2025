@@ -4,8 +4,8 @@ using UnityEngine.SceneManagement;
 public class PauseController : MonoBehaviour
 {
     [Header("Interfaces")]
-    public GameObject pauseMenuUI; // O painel preto do pause
-    public GameObject hudUI;       // O painel do HUD (Vida, Speed, etc)
+    public GameObject pauseMenuUI; 
+    public GameObject hudUI;       
 
     [Header("Configurações")]
     public string nomeCenaMenu = "Menu"; 
@@ -14,7 +14,6 @@ public class PauseController : MonoBehaviour
 
     void Start()
     {
-        // Garante que o jogo comece com o mouse preso e escondido (para pilotar a nave)
         TravarMouse();
     }
 
@@ -35,42 +34,36 @@ public class PauseController : MonoBehaviour
 
     public void Resume()
     {
-        pauseMenuUI.SetActive(false); // Esconde o menu de pause
-        if(hudUI != null) hudUI.SetActive(true);   // MOSTRA o HUD de volta
+        pauseMenuUI.SetActive(false);
+        if(hudUI != null) hudUI.SetActive(true);
         
         Time.timeScale = 1f;
         jogoEstaPausado = false;
 
-        // Esconde o mouse de novo para voltar a jogar
         TravarMouse();
     }
 
     void Pause()
     {
-        pauseMenuUI.SetActive(true);  // Mostra o menu de pause
-        if(hudUI != null) hudUI.SetActive(false);  // ESCONDE o HUD
+        pauseMenuUI.SetActive(true);
+        if(hudUI != null) hudUI.SetActive(false);
         
         Time.timeScale = 0f;
         jogoEstaPausado = true;
 
-        // Libera o mouse para clicar nos botões
         DestravarMouse();
     }
 
-public void CarregarMenu()
+    public void CarregarMenu()
     {
-        // 1. Encontra a Nave e desliga ela na hora
-        // Se a nave estiver desligada, o OnGUI (as caixas pretas) não roda.
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null) 
         {
             player.SetActive(false);
         }
 
-        // 2. Garante que o HUD do Canvas também fique apagado
         if(hudUI != null) hudUI.SetActive(false);
 
-        // 3. Agora sim, descongelamos o tempo e trocamos de cena
         Time.timeScale = 1f;
         SceneManager.LoadScene(nomeCenaMenu);
     }
@@ -80,17 +73,15 @@ public void CarregarMenu()
         Application.Quit();
     }
 
-    // --- FUNÇÕES AUXILIARES DE MOUSE ---
-
     void TravarMouse()
     {
-        Cursor.lockState = CursorLockMode.Locked; // Prende o mouse no centro
-        Cursor.visible = false; // Deixa invisível
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void DestravarMouse()
     {
-        Cursor.lockState = CursorLockMode.None; // Solta o mouse
-        Cursor.visible = true; // Mostra a setinha
+        Cursor.lockState = CursorLockMode.None; 
+        Cursor.visible = true; 
     }
 }

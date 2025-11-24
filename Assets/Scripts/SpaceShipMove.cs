@@ -55,7 +55,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
         rb.angularDamping = 4f;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        // Garante que começa travado
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         
@@ -75,11 +74,8 @@ public class ArcadeNave_VFinal : MonoBehaviour
 
     void Update()
     {
-        // <<< ALTERAÇÃO 1: Se o jogo estiver pausado (TimeScale 0), não processa input
-        // Isso evita que a nave gire sozinha enquanto você mexe o mouse no menu
         if (estaMorto || Time.timeScale == 0) return;
 
-        // INPUTS
         bool temInput = posicaoMira.magnitude > 15f || Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f;
         if (temInput) tempoSemInput = 0f; else tempoSemInput += Time.deltaTime;
 
@@ -91,14 +87,12 @@ public class ArcadeNave_VFinal : MonoBehaviour
         float alvo = Input.GetKey(KeyCode.W) ? velocidadeTurbo : (Input.GetKey(KeyCode.S) ? (velocidadeAtual > 10 ? 0 : velocidadeRe) : velocidadeCruzeiro);
         velocidadeAtual = Mathf.SmoothDamp(velocidadeAtual, alvo, ref velocidadeVelocity, tempoDeAceleracao);
 
-        // AUDIO
         if (motorAudioSource != null && !jogoPausado)
         {
             float pitch = velocidadeAtual >= 0 ? Mathf.Lerp(0.8f, 3.5f, Mathf.Pow(velocidadeAtual/velocidadeTurbo, 1.5f)) : 0.8f;
             motorAudioSource.pitch = Mathf.Lerp(motorAudioSource.pitch, pitch, Time.deltaTime * 3f);
         }
 
-        // FOV
         if (camaraPrincipal != null)
         {
             float fovAlvo = Mathf.Lerp(fovNormal, fovTurbo, velocidadeAtual/velocidadeTurbo);
@@ -135,15 +129,12 @@ public class ArcadeNave_VFinal : MonoBehaviour
         if (vidaAtual <= 0) GameOver();
     }
 
-void GameOver()
+    void GameOver()
     {
         estaMorto = true;
         
-        // Liga a tela de Game Over
         if (telaGameOver != null) telaGameOver.SetActive(true);
-        
-        // Desliga o HUD (e o Minimap junto!)
-        if (hudGameObject != null) hudGameObject.SetActive(false); // <<< ADICIONE ISSO
+        if (hudGameObject != null) hudGameObject.SetActive(false); 
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -195,17 +186,13 @@ void GameOver()
         }
     }
 
-    // --- HUD (Modo Clássico) ---
     void OnGUI()
     {
-        // <<< ALTERAÇÃO 2: Adicionei '|| Time.timeScale == 0'
-        // Se o tempo estiver parado (Pause), o HUD e a mira "O" não serão desenhados.
         if (estaMorto || jogoPausado || Time.timeScale == 0 || camaraPrincipal == null) return;
 
         float cx = Screen.width / 2f;
         float cy = Screen.height / 2f;
 
-        // --- MIRA CENTRAL (+) ---
         if (pontoDeTiro != null)
         {
             Vector3 posReal = pontoDeTiro.position + (pontoDeTiro.forward * 1000f);
@@ -218,12 +205,9 @@ void GameOver()
             }
         }
 
-        // --- MIRA DO MOUSE (O) ---
-        // Como colocamos o 'if' lá em cima, isso aqui não roda se estiver pausado
         GUI.color = new Color(1, 1, 1, 0.5f);
         GUI.Label(new Rect(cx + posicaoMira.x - 10, cy - posicaoMira.y - 10, 20, 20), "O");
 
-        // --- RESTO DO HUD ---
         GUI.color = Color.black;
         GUI.DrawTexture(new Rect(20, 20, 160, 60), Texture2D.whiteTexture);
         GUI.color = Color.white;

@@ -5715,7 +5715,7 @@ GameObject:
   - component: {fileID: 424626713}
   - component: {fileID: 424626712}
   m_Layer: 5
-  m_Name: PauseMenu
+  m_Name: PainelPause
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7765,7 +7765,7 @@ GameObject:
   - component: {fileID: 1422348368}
   - component: {fileID: 1422348367}
   m_Layer: 5
-  m_Name: RawImage
+  m_Name: MinimapImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

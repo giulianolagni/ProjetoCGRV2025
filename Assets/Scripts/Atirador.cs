@@ -22,11 +22,11 @@ public class Atirador : MonoBehaviour
         {
             jogador = objJogador.transform;
             rbJogador = objJogador.GetComponent<Rigidbody>();
-            Debug.Log("SCRIPT ATIRADOR: Player encontrado! Agora vai funcionar.");
+            Debug.Log("SCRIPT ATIRADOR: Player encontrado!");
         }
         else
         {
-            Debug.LogError("SCRIPT ATIRADOR: NÃO ACHEI O PLAYER! Verifique a Tag 'Player'.");
+            Debug.LogError("SCRIPT ATIRADOR: NÃO ACHEI O PLAYER!");
         }
     }
 
@@ -43,10 +43,9 @@ public class Atirador : MonoBehaviour
 
     void Atirar()
     {
-        // Verificações de segurança
         if (prefabProjetil == null)
         {
-            Debug.LogError("O Prefab do tiro sumiu!");
+            Debug.LogError("Prefab do tiro sumiu!");
             return;
         }
 
@@ -54,10 +53,8 @@ public class Atirador : MonoBehaviour
         if (rbJogador != null)
         {
             float distancia = Vector3.Distance(transform.position, jogador.position);
-            // Ajuste fino da velocidade se necessário
             float tempoViagem = distancia / (forcaDisparo * 0.02f); 
             
-            // SE DER ERRO VERMELHO AQUI, TROQUE 'linearVelocity' POR 'velocity'
             Vector3 velocidadeDoPlayer = rbJogador.linearVelocity; 
             
             posicaoAlvo = jogador.position + (velocidadeDoPlayer * tempoViagem * fatorDeAntecipacao);

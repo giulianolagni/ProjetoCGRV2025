@@ -8,8 +8,6 @@ public class LootItem : MonoBehaviour
     public float velocidadeFlutuacao = 2f;
 
     private Vector3 posInicial;
-    
-    // --- TRAVA DE SEGURANÇA ---
     private bool jaColetado = false; 
 
     void Start()
@@ -27,12 +25,10 @@ public class LootItem : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        // 1. A PERGUNTA DE OURO: Já fui pego?
-        if (jaColetado) return; // Se sim, para tudo e não faz nada.
+        if (jaColetado) return;
 
         if (other.CompareTag("Player"))
         {
-            // 2. TRAVA IMEDIATAMENTE
             jaColetado = true;
 
             ArcadeNave_VFinal nave = other.GetComponent<ArcadeNave_VFinal>();
@@ -41,11 +37,10 @@ public class LootItem : MonoBehaviour
             {
                 nave.ColetarFragmento();
                 
-                // Desativa o visual na hora pra sumir instantaneamente (opcional, mas fica melhor)
                 GetComponent<Renderer>().enabled = false; 
                 GetComponent<Collider>().enabled = false;
 
-                Destroy(gameObject, 0.1f); // Dá um tempinho pro som tocar se tiver
+                Destroy(gameObject, 0.1f);
             }
         }
     }

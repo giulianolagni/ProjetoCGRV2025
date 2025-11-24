@@ -16,17 +16,9 @@ public class RotaManager : MonoBehaviour
 
     [Header("Configuração dos Asteroides")]
     public GameObject prefabAsteroide;
-    
-    [Tooltip("Em qual anel começam os asteroides? (0 = Desde o início)")]
     public int comecarNoAnel = 2; 
-    
-    [Tooltip("Em qual anel param os asteroides?")]
     public int terminarNoAnel = 4;
-
-    [Tooltip("Quantos asteroides por trecho. SE AUMENTAR A LARGURA, AUMENTE ISSO TAMBÉM!")]
     public int densidadeDeAsteroides = 50; 
-    
-    [Tooltip("O quão espalhados eles ficam. Tente 100 ou 150.")]
     public float larguraDoCampo = 100f;
 
     [Header("UI de Vitória")]
@@ -52,7 +44,7 @@ public class RotaManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.P))
         {
             Debug.Log("CHEAT ATIVADO: Vitória Instantânea!");
-            Vitoria(); // Chama a mesma função de quando passa pelo último anel
+            Vitoria(); 
         }
     }
 
@@ -73,31 +65,24 @@ public class RotaManager : MonoBehaviour
 
         for (int i = 0; i < quantidadeDeAneis; i++)
         {
-            // 1. Curvas
             float rotX = Random.Range(-intensidadeDaCurva, intensidadeDaCurva);
             float rotY = Random.Range(-intensidadeDaCurva, intensidadeDaCurva);
             Quaternion rotacaoAleatoria = Quaternion.Euler(rotX, rotY, 0);
             direcaoAtual = rotacaoAleatoria * direcaoAtual;
 
-            // 2. Posição
             Vector3 posicaoSpawn = pontoAnterior + (direcaoAtual * distanciaEntreAneis);
             Quaternion rotacaoDoAnel = Quaternion.LookRotation(direcaoAtual);
 
-            // 3. Prefab
             GameObject prefabParaUsar = (i == quantidadeDeAneis - 1 && prefabFinal != null) ? prefabFinal : prefabCheckpoint;
 
-            // 4. Instancia
             GameObject novoAnel = Instantiate(prefabParaUsar, posicaoSpawn, rotacaoDoAnel);
             novoAnel.SetActive(false);
             aneisCriados.Add(novoAnel);
 
-            // --- LÓGICA NOVA: CONTROLE DE ONDE APARECEM ---
-            // Verifica se o índice atual 'i' está dentro do intervalo que você pediu
             if (i >= comecarNoAnel && i <= terminarNoAnel)
             {
                 GerarAsteroidesNoCaminho(pontoAnterior, posicaoSpawn);
             }
-            // -----------------------------------------------
 
             pontoAnterior = posicaoSpawn;
         }
@@ -111,16 +96,13 @@ public class RotaManager : MonoBehaviour
 
         for (int k = 0; k < densidadeDeAsteroides; k++)
         {
-            // Sorteia posição na linha
             float progresso = Random.Range(0.1f, 0.9f);
             Vector3 pontoNaLinha = Vector3.Lerp(inicio, fim, progresso);
 
-            // Espalha usando a largura
             Vector3 posicaoFinal = pontoNaLinha + (Random.insideUnitSphere * larguraDoCampo);
 
             GameObject asteroide = Instantiate(prefabAsteroide, posicaoFinal, Random.rotation);
 
-            // Tamanho aleatório
             float escala = Random.Range(5f, 25f); 
             asteroide.transform.localScale = Vector3.one * escala;
             
@@ -140,23 +122,18 @@ public class RotaManager : MonoBehaviour
         }
     }
 
-
-[ContextMenu("Forcar Vitoria")]
+    [ContextMenu("Forcar Vitoria")]
     public void Vitoria()
     {
         if (scriptNave != null) scriptNave.DesativarSistemas();
         
         float tempoTotalPartida = Time.time - tempoInicial;
 
-        // --- LÓGICA DE NOVO RECORDE ---
-        // 1. Antes de salvar, vemos qual era o melhor tempo antigo (Posição 0)
         float melhorTempoAntigo = PlayerPrefs.GetFloat("RankTempo_0", 5999f);
         bool ehNovoRecorde = tempoTotalPartida < melhorTempoAntigo;
 
-        // 2. Agora salvamos o seu tempo na lista (se entrar no top 10)
         SalvarNoTop10(tempoTotalPartida, MenuController.nomeDoJogadorAtual);
 
-        // 3. Montamos o texto
         float minutos = Mathf.FloorToInt(tempoTotalPartida / 60);
         float segundos = Mathf.FloorToInt(tempoTotalPartida % 60);
 
@@ -164,7 +141,6 @@ public class RotaManager : MonoBehaviour
         {
             textoTempoFinal.text = string.Format("PILOTO: {0}\nTEMPO: {1:00}:{2:00}", MenuController.nomeDoJogadorAtual, minutos, segundos);
 
-            // 4. Se você bateu o Top 1, mostramos a mensagem amarela!
             if (ehNovoRecorde)
             {
                 textoTempoFinal.text += "\n<color=yellow>NOVO RECORDE!</color>";
@@ -179,46 +155,32 @@ public class RotaManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    // --- FUNÇÃO AUXILIAR NOVA PARA O TOP 10 ---
     void SalvarNoTop10(float tempoNovo, string nomeNovo)
     {
-        // 1. Carrega a lista atual da memória para listas temporárias
         List<float> tempos = new List<float>();
         List<string> nomes = new List<string>();
 
         for (int i = 0; i < 10; i++)
         {
-            // Se não tiver tempo salvo nessa posição, usa 5999 (infinito)
             tempos.Add(PlayerPrefs.GetFloat("RankTempo_" + i, 5999f));
             nomes.Add(PlayerPrefs.GetString("RankNome_" + i, "---"));
         }
 
-        // 2. Adiciona o novo resultado na lista
         tempos.Add(tempoNovo);
         nomes.Add(nomeNovo);
 
-        // 3. Ordena a lista (Bubble Sort simples, pois são poucos itens)
-        // Precisamos ordenar os TEMPOS, mas mover os NOMES junto
         for (int i = 0; i < tempos.Count; i++)
         {
             for (int j = i + 1; j < tempos.Count; j++)
             {
-                if (tempos[j] < tempos[i]) // Se o tempo J for menor (melhor)
+                if (tempos[j] < tempos[i]) 
                 {
-                    // Troca os tempos de lugar
-                    float tempT = tempos[i];
-                    tempos[i] = tempos[j];
-                    tempos[j] = tempT;
-
-                    // Troca os nomes de lugar junto
-                    string tempN = nomes[i];
-                    nomes[i] = nomes[j];
-                    nomes[j] = tempN;
+                    float tempT = tempos[i]; tempos[i] = tempos[j]; tempos[j] = tempT;
+                    string tempN = nomes[i]; nomes[i] = nomes[j]; nomes[j] = tempN;
                 }
             }
         }
 
-        // 4. Salva apenas os 10 primeiros de volta na memória
         for (int i = 0; i < 10; i++)
         {
             PlayerPrefs.SetFloat("RankTempo_" + i, tempos[i]);
@@ -227,6 +189,7 @@ public class RotaManager : MonoBehaviour
         
         PlayerPrefs.Save();
     }
+
     public void SairDoJogo()
     {
         Application.Quit();
@@ -235,21 +198,16 @@ public class RotaManager : MonoBehaviour
         #endif
     }
 
-
     public void VoltarAoMenu()
     {
-        // 1. Encontra a Nave e desliga ela na hora
-        // Isso impede que o OnGUI (HUD de vida/velocidade) seja desenhado nesse último frame
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null) 
         {
             player.SetActive(false);
         }
 
-        // 2. Garante que o HUD do Canvas (Minimap) também fique apagado
         if (hudPanel != null) hudPanel.SetActive(false);
 
-        // 3. Agora sim, descongelamos o tempo e trocamos de cena
         Time.timeScale = 1f; 
         SceneManager.LoadScene(nomeCenaMenu); 
     }

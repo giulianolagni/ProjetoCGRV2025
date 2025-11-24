@@ -7,18 +7,13 @@ public class InimigoController : MonoBehaviour
     private float vidaAtual;
 
     [Header("Feedback Visual")]
-    public GameObject prefabTextoDano; // Texto flutuante
+    public GameObject prefabTextoDano; 
     public Transform pontoDeTexto;
-    
-    [Tooltip("Arraste o Prefab da partícula de explosão aqui")]
     public GameObject prefabExplosao; 
 
-    // --- AQUI ESTAVA FALTANDO! ---
     [Header("Loot / Recompensa")]
-    [Tooltip("Arraste aqui o objeto 3D que vai cair quando o inimigo morrer")]
     public GameObject prefabLoot; 
     [Range(0, 100)] public int chanceDeDrop = 100; 
-    // -----------------------------
 
     [Header("Atributos de Movimento")]
     public float forcaDeMovimento = 700f; 
@@ -76,8 +71,6 @@ public class InimigoController : MonoBehaviour
     {
         vidaAtual -= dano;
 
-
-        // Piscar
         if(meshRenderer != null) 
         {
             meshRenderer.material.color = Color.red;
@@ -97,14 +90,12 @@ public class InimigoController : MonoBehaviour
 
     void Morrer()
     {
-        // 1. Explosão
         if (prefabExplosao != null)
         {
             GameObject explosao = Instantiate(prefabExplosao, transform.position, transform.rotation);
             Destroy(explosao, 3f);
         }
 
-        // 2. DROP DO LOOT (Agora vai funcionar porque a variável existe lá em cima)
         if (prefabLoot != null)
         {
             int sorteio = Random.Range(0, 101);
@@ -114,7 +105,6 @@ public class InimigoController : MonoBehaviour
             }
         }
 
-        // 3. Tchau inimigo
         Destroy(gameObject);
     }
 

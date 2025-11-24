@@ -2,11 +2,10 @@ using UnityEngine;
 
 public class MusicManager : MonoBehaviour
 {
-    // Singleton: Garante que só exista UM desse script no jogo todo
     public static MusicManager instance;
 
     [Header("Suas Músicas")]
-    public AudioClip[] playlist; // Arraste suas músicas aqui
+    public AudioClip[] playlist;
     
     [Header("Configurações")]
     [Range(0f, 1f)] public float volume = 0.5f;
@@ -17,17 +16,13 @@ public class MusicManager : MonoBehaviour
 
     void Awake()
     {
-        // --- LÓGICA PARA NÃO DESTRUIR NO RESTART ---
         if (instance == null)
         {
-            // Se eu sou o primeiro DJ, eu assumo o posto
             instance = this;
-            DontDestroyOnLoad(gameObject); // A MÁGICA ACONTECE AQUI
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            // Se já existe um DJ tocando (de uma cena anterior), 
-            // eu (o novo que acabou de carregar) me autodestruo.
             Destroy(gameObject);
         }
     }
@@ -37,7 +32,6 @@ public class MusicManager : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         audioSource.volume = volume;
 
-        // Começa a tocar se tiver música
         if (playlist.Length > 0)
         {
             TocarMusica(0);
@@ -46,7 +40,6 @@ public class MusicManager : MonoBehaviour
 
     void Update()
     {
-        // Se a música acabou, toca a próxima
         if (!audioSource.isPlaying)
         {
             ProximaMusica();
@@ -57,7 +50,6 @@ public class MusicManager : MonoBehaviour
     {
         if (playlist.Length == 0) return;
 
-        // Garante que o índice é válido
         indiceAtual = index % playlist.Length;
 
         audioSource.clip = playlist[indiceAtual];
@@ -74,7 +66,6 @@ public class MusicManager : MonoBehaviour
         }
         else
         {
-            // Avança 1, se chegar no fim volta pro 0
             indiceAtual = (indiceAtual + 1) % playlist.Length;
         }
 
