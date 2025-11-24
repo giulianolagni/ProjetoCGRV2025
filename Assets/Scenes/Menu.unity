@@ -312,7 +312,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'New Game
+  m_text: 'JOGAR
 
 '
   m_isRightToLeft: 0
@@ -450,7 +450,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Exit
+  m_text: SAIR
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
@@ -663,7 +663,7 @@ GameObject:
   - component: {fileID: 440150501}
   - component: {fileID: 440150500}
   m_Layer: 5
-  m_Name: New Game
+  m_Name: Jogar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -732,7 +732,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 440150501}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 725742569}
+        m_TargetAssemblyTypeName: MenuController, Assembly-CSharp
+        m_MethodName: Jogar
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &440150501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -828,9 +840,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Options
-
-'
+  m_text: RANKING
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
@@ -1036,7 +1046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -1124,8 +1134,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 1602823466}
-  menuOpcoes: {fileID: 859396943}
+  menuOpcoes: {fileID: 0}
   rawImage: {fileID: 647052732}
+  nomeDaCenaDoJogo: JogoPrincipal
+  painelDificuldade: {fileID: 0}
+  painelRanking: {fileID: 0}
 --- !u!1 &851563380
 GameObject:
   m_ObjectHideFlags: 0
@@ -1437,7 +1450,7 @@ GameObject:
   - component: {fileID: 898951905}
   - component: {fileID: 898951904}
   m_Layer: 5
-  m_Name: Load Game
+  m_Name: Dificuldade
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1627,7 +1640,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 983436812}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 725742569}
+        m_TargetAssemblyTypeName: MenuController, Assembly-CSharp
+        m_MethodName: Sair
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &983436812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1723,7 +1748,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Pressione qualquer tecla para continuar
+  m_text: 'Feito com amor
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2485,7 +2512,7 @@ GameObject:
   - component: {fileID: 1744750546}
   - component: {fileID: 1744750545}
   m_Layer: 5
-  m_Name: Options
+  m_Name: Ranking
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2787,7 +2814,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Load Game
+  m_text: 'DIFICULDADE
 
 '
   m_isRightToLeft: 0
