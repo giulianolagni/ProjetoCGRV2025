@@ -17,7 +17,7 @@ Um jogo de nave arcade 3D com sistema de ondas, dificuldade progressiva e rankin
 
 ## 📥 Download e Instalação
 Baixe a versão final (Windows) no link abaixo:
-https://drive.google.com/file/d/1mqfWJxnjz4Vr4G9vROA8lp9PL_BW8anl/view?usp=sharing
+https://drive.google.com/file/d/1xWTaFreEV_mWnR9-cScaN_4zO25vXoJF/view?usp=sharing
 
 **Instruções:**
 1. Baixe o arquivo .zip.
