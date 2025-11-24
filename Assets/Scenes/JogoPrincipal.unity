@@ -5806,7 +5806,7 @@ MonoBehaviour:
   limiteRato: 300
   sensibilidadeRato: 1
   pontoDeTiro: {fileID: 1562267336}
-  vidaMaxima: 10
+  vidaMaxima: 1000
   telaGameOver: {fileID: 366649878}
   hudGameObject: {fileID: 1004456316}
   fragmentosTotais: 5
