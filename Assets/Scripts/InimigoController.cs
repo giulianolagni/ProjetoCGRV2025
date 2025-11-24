@@ -76,16 +76,6 @@ public class InimigoController : MonoBehaviour
     {
         vidaAtual -= dano;
 
-        // Texto de Dano
-        if (prefabTextoDano != null)
-        {
-            Vector3 posicaoSpawn = transform.position + Vector3.up * 2f;
-            if (pontoDeTexto != null) posicaoSpawn = pontoDeTexto.position;
-
-            GameObject textoObj = Instantiate(prefabTextoDano, posicaoSpawn, Quaternion.identity);
-            TextoDano scriptTexto = textoObj.GetComponent<TextoDano>();
-            if (scriptTexto != null) scriptTexto.Configurar(dano);
-        }
 
         // Piscar
         if(meshRenderer != null) 

@@ -57,8 +57,20 @@ public class PauseController : MonoBehaviour
         DestravarMouse();
     }
 
-    public void CarregarMenu()
+public void CarregarMenu()
     {
+        // 1. Encontra a Nave e desliga ela na hora
+        // Se a nave estiver desligada, o OnGUI (as caixas pretas) não roda.
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) 
+        {
+            player.SetActive(false);
+        }
+
+        // 2. Garante que o HUD do Canvas também fique apagado
+        if(hudUI != null) hudUI.SetActive(false);
+
+        // 3. Agora sim, descongelamos o tempo e trocamos de cena
         Time.timeScale = 1f;
         SceneManager.LoadScene(nomeCenaMenu);
     }

@@ -21,7 +21,7 @@ public class AsteroideController : MonoBehaviour
     {
         vidaAtual = vidaMaxima;
         
-        // Aviso de segurança no console
+        // Aviso de segurança no console 
         if(prefabExplosao == null) 
             Debug.LogError($"ERRO CRÍTICO: O Asteroide '{gameObject.name}' está sem a EXPLOSÃO no Inspector!");
     }
@@ -30,14 +30,6 @@ public class AsteroideController : MonoBehaviour
     {
         vidaAtual -= dano;
 
-        // (Opcional) Texto de Dano
-        if (prefabTextoDano != null)
-        {
-            // Cria o texto um pouco acima da pedra
-            GameObject textoObj = Instantiate(prefabTextoDano, transform.position + Vector3.up * 5f, Quaternion.identity);
-            TextoDano scriptTexto = textoObj.GetComponent<TextoDano>();
-            if (scriptTexto != null) scriptTexto.Configurar(dano);
-        }
 
         if (vidaAtual <= 0)
         {
