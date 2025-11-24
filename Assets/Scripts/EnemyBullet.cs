@@ -7,6 +7,11 @@ public class EnemyBullet : MonoBehaviour
 
     void Start()
     {
+        // --- AQUI ESTÁ A MÁGICA ---
+        // A bala pergunta ao DifficultySetup qual é o dano atual
+        damage = DifficultySetup.danoGlobalInimigo;
+        // ---------------------------
+
         Destroy(gameObject, lifeTime);
     }
 
@@ -14,10 +19,20 @@ public class EnemyBullet : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            // Tenta pegar o script de vida da nave principal (não o PlayerHealth antigo)
+            ArcadeNave_VFinal nave = other.GetComponent<ArcadeNave_VFinal>();
+            
+            if (nave != null)
             {
-                playerHealth.TakeDamage(damage);
+                nave.TomarDano(damage);
+                // Debug para você conferir se mudou
+                Debug.Log($"Inimigo acertou! Dano causado: {damage}");
+            }
+            // Caso você ainda use o sistema antigo em paralelo:
+            else 
+            {
+                 PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+                 if (playerHealth != null) playerHealth.TakeDamage(damage);
             }
 
             Destroy(gameObject);

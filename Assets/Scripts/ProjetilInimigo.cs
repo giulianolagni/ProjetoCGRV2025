@@ -7,6 +7,9 @@ public class ProjetilInimigo : MonoBehaviour
 
     void Start()
     {
+        // Lê a dificuldade global
+        danoCausado = DifficultySetup.danoGlobalInimigo;
+        
         Destroy(gameObject, tempoDeVida);
     }
 

@@ -1,83 +1,82 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.Video;
 using UnityEngine.SceneManagement;
+using TMPro; 
 
 public class MenuController : MonoBehaviour
 {
-    [Header("Componentes Visuais")]
+    [Header("Componentes da Intro")]
     public VideoPlayer videoPlayer;
-    public GameObject menuOpcoes; // O pai dos botões (Menuopcoes)
-    public GameObject rawImage;   // A tela do vídeo
+    public GameObject menuOpcoes;
+    public GameObject rawImage;
     private Animator animatorRawImage;
 
-    [Header("Configuração do Jogo")]
-    public string nomeDaCenaDoJogo = "GameScene"; 
-    
-    // Painéis extras (opcional)
-    public GameObject painelDificuldade;
-    public GameObject painelRanking;
+    [Header("Configuração dos Botões")]
+    public TextMeshProUGUI textoBotaoDificuldade;
+
+    [Header("Cenas e Painéis")]
+    public string nomeDaCenaDoJogo = "JogoPrincipal"; 
+    public GameObject painelRanking; 
+
+    private int indiceDificuldade = 1; 
+    private string[] nomesDificuldade = { "FÁCIL", "NORMAL", "DIFÍCIL" };
 
     void Start()
     {
-        // 1. Pega o componente de animação
-        if (rawImage != null)
-            animatorRawImage = rawImage.GetComponent<Animator>();
-
-        // 2. INICIA TUDO AUTOMATICAMENTE
-        // Liga a tela do vídeo
+        // REMOVI O PlayerPrefs.DeleteAll() DAQUI POIS ELE RESETAVA TUDO SEMPRE
+        
         if (rawImage != null)
         {
-            rawImage.SetActive(true);
-            if (animatorRawImage != null) animatorRawImage.SetTrigger("fadeIn");
+            rawImage.SetActive(false);
+            animatorRawImage = rawImage.GetComponent<Animator>();
         }
-
-        // Dá play no vídeo
-        if (videoPlayer != null)
-            videoPlayer.Play();
-
-        // Mostra os botões do menu imediatamente
-        if (menuOpcoes != null)
-            menuOpcoes.SetActive(true);
-        
-        // Garante que os painéis extras comecem fechados
-        if (painelDificuldade != null) painelDificuldade.SetActive(false);
+        if (menuOpcoes != null) menuOpcoes.SetActive(false);
         if (painelRanking != null) painelRanking.SetActive(false);
-    }
 
-    // O Update agora ficou vazio porque não precisamos mais verificar teclas a todo momento
-    void Update()
-    {
-    }
+        if (rawImage != null) { rawImage.SetActive(true); if(animatorRawImage != null) animatorRawImage.SetTrigger("fadeIn"); }
+        if (videoPlayer != null) videoPlayer.Play();
+        if (menuOpcoes != null) menuOpcoes.SetActive(true);
 
-    // --- FUNÇÕES DOS BOTÕES ---
+        // Carrega a dificuldade salva
+        indiceDificuldade = PlayerPrefs.GetInt("DificuldadeJogo", 1);
+        AtualizarTextoDificuldade();
+    }
 
     public void Jogar()
     {
         SceneManager.LoadScene(nomeDaCenaDoJogo);
     }
 
-    public void Dificuldade()
+    public void MudarDificuldade()
     {
-        Debug.Log("Clicou em Dificuldade");
-        if (painelDificuldade != null) painelDificuldade.SetActive(true);
+        indiceDificuldade++;
+        if (indiceDificuldade > 2) indiceDificuldade = 0;
+
+        PlayerPrefs.SetInt("DificuldadeJogo", indiceDificuldade);
+        PlayerPrefs.Save(); 
+
+        AtualizarTextoDificuldade();
     }
 
     public void Ranking()
     {
-        Debug.Log("Clicou em Ranking");
         if (painelRanking != null) painelRanking.SetActive(true);
     }
 
     public void Sair()
     {
-        Debug.Log("Saindo do Jogo..."); // Mostra mensagem no console
-        Application.Quit(); // Fecha o jogo compilado (.exe)
-
-        // Esse trecho faz o botão parar o Play dentro do Unity Editor
+        Application.Quit();
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #endif
+    }
+
+    void AtualizarTextoDificuldade()
+    {
+        if (textoBotaoDificuldade != null)
+        {
+            textoBotaoDificuldade.text = nomesDificuldade[indiceDificuldade];
+        }
     }
 }

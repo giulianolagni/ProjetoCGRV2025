@@ -20,7 +20,7 @@ public class ArcadeNave_VFinal : MonoBehaviour
 
     [Header("--- COMBATE ---")]
     [SerializeField] private Transform pontoDeTiro;
-    [SerializeField] private float vidaMaxima = 100f;
+    public float vidaMaxima = 100f;
     [SerializeField] private GameObject telaGameOver; 
     [SerializeField] private GameObject hudGameObject;
     
