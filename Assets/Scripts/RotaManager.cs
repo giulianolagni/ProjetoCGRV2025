@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro; 
+using UnityEngine.SceneManagement;
 
 public class RotaManager : MonoBehaviour
 {
@@ -30,7 +31,9 @@ public class RotaManager : MonoBehaviour
 
     [Header("UI de Vitória")]
     public GameObject telaVitoria;
+    public GameObject hudPanel;
     public TextMeshProUGUI textoTempoFinal; 
+    public string nomeCenaMenu = "Menu";
 
     private List<GameObject> aneisCriados = new List<GameObject>();
     private int indexAtual = 0;
@@ -41,6 +44,16 @@ public class RotaManager : MonoBehaviour
     void Start()
     {
         tempoInicial = Time.time;
+    }
+
+    void Update()
+    {
+        // CHEAT: Se apertar a tecla "P", ganha o jogo na hora
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Log("CHEAT ATIVADO: Vitória Instantânea!");
+            Vitoria(); // Chama a mesma função de quando passa pelo último anel
+        }
     }
 
     public void IniciarRotaDeFuga(Transform playerTransform)
@@ -127,7 +140,9 @@ public class RotaManager : MonoBehaviour
         }
     }
 
-    void Vitoria()
+
+[ContextMenu("Forcar Vitoria")]
+public void Vitoria()
     {
         if (scriptNave != null) scriptNave.DesativarSistemas();
         
@@ -137,7 +152,12 @@ public class RotaManager : MonoBehaviour
 
         if (textoTempoFinal != null) textoTempoFinal.text = string.Format("TEMPO TOTAL: {0:00}:{1:00}", minutos, segundos);
 
+        // Ativa a tela de fim de jogo
         if (telaVitoria != null) telaVitoria.SetActive(true);
+
+        // DESATIVA O HUD (Vida, Minimap, etc) PARA LIMPAR A TELA
+        if (hudPanel != null) hudPanel.SetActive(false); // <<< NOVO
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         Time.timeScale = 0f;
@@ -149,5 +169,12 @@ public class RotaManager : MonoBehaviour
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #endif
+    }
+
+
+    public void VoltarAoMenu()
+    {
+        Time.timeScale = 1f; // Descongela o jogo
+        SceneManager.LoadScene(nomeCenaMenu); // Carrega o menu
     }
 }
