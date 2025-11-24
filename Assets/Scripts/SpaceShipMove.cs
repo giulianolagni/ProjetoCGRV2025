@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Necessário para reiniciar a cena
+using UnityEngine.SceneManagement;
 
 public class ArcadeNave_VFinal : MonoBehaviour
 {
@@ -25,10 +25,8 @@ public class ArcadeNave_VFinal : MonoBehaviour
     
     [Header("--- MISSÃO (FRAGMENTOS) ---")]
     public int fragmentosTotais = 5;
-    public RotaManager rotaManager; // ARRASTE O GERENCIADOR AQUI
+    public RotaManager rotaManager;
     private int fragmentosColetados = 0;
-    
-    // Variável para impedir contagem dupla (Cooldown de coleta)
     private float tempoUltimaColeta = 0f;
 
     [Header("--- VISUAL & AUDIO ---")]
@@ -43,9 +41,8 @@ public class ArcadeNave_VFinal : MonoBehaviour
     private float tempoSemInput = 0f;
     private float vidaAtual;
     
-    // Estados do Jogo
     private bool estaMorto = false;
-    private bool jogoPausado = false; // Usado na vitória para esconder o HUD
+    private bool jogoPausado = false;
     
     public float VidaAtualPublica => vidaAtual; 
 
@@ -57,6 +54,7 @@ public class ArcadeNave_VFinal : MonoBehaviour
         rb.angularDamping = 4f;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
+        // Garante que começa travado
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         
@@ -76,7 +74,9 @@ public class ArcadeNave_VFinal : MonoBehaviour
 
     void Update()
     {
-        if (estaMorto) return;
+        // <<< ALTERAÇÃO 1: Se o jogo estiver pausado (TimeScale 0), não processa input
+        // Isso evita que a nave gire sozinha enquanto você mexe o mouse no menu
+        if (estaMorto || Time.timeScale == 0) return;
 
         // INPUTS
         bool temInput = posicaoMira.magnitude > 15f || Mathf.Abs(Input.GetAxis("Horizontal")) > 0.01f;
@@ -109,8 +109,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
     {
         if (estaMorto) return;
 
-        // MOVIMENTO
-        // SE DER ERRO VERMELHO NO UNITY ANTIGO, TROQUE 'linearVelocity' POR 'velocity'
         rb.linearVelocity = transform.forward * velocidadeAtual; 
 
         Vector2 input = posicaoMira / limiteRato;
@@ -129,7 +127,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
         }
     }
 
-    // --- COMBATE E VIDA ---
     public void TomarDano(float dano)
     {
         if (estaMorto || jogoPausado) return;
@@ -146,19 +143,14 @@ public class ArcadeNave_VFinal : MonoBehaviour
         Time.timeScale = 0f;
     }
     
-    // --- Chamado pelo RotaManager na Vitória ---
     public void DesativarSistemas()
     {
-        jogoPausado = true; // Isso vai esconder o HUD no OnGUI
-        
-        // Desliga som
+        jogoPausado = true;
         if (motorAudioSource != null)
         {
             motorAudioSource.Stop();
             motorAudioSource.volume = 0;
         }
-
-        // Para a nave
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
     }
@@ -169,10 +161,8 @@ public class ArcadeNave_VFinal : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // --- COLETA E MISSÃO ---
     public void ColetarFragmento()
     {
-        // Trava de tempo para evitar contagem dupla no mesmo frame
         if (Time.time < tempoUltimaColeta + 0.1f) return;
         tempoUltimaColeta = Time.time;
 
@@ -181,19 +171,10 @@ public class ArcadeNave_VFinal : MonoBehaviour
 
         if (fragmentosColetados >= fragmentosTotais)
         {
-            // AVISA O MANAGER E PASSA A POSIÇÃO DO PLAYER (this.transform)
-            if (rotaManager != null)
-            {
-                rotaManager.IniciarRotaDeFuga(this.transform);
-            }
-            else
-            {
-                Debug.LogError("ROTA MANAGER NÃO ESTÁ CONECTADO NO INSPECTOR DA NAVE!");
-            }
+            if (rotaManager != null) rotaManager.IniciarRotaDeFuga(this.transform);
         }
     }
 
-    // --- COLISÕES E GATILHOS ---
     void OnCollisionEnter(Collision c) 
     { 
         if(c.relativeVelocity.magnitude > 5) TomarDano(c.relativeVelocity.magnitude * 0.5f); 
@@ -201,7 +182,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        // Se bater no anel do checkpoint
         if (other.CompareTag("Checkpoint") && rotaManager != null)
         {
             rotaManager.CheckpointAlcancado(other.gameObject);
@@ -211,8 +191,9 @@ public class ArcadeNave_VFinal : MonoBehaviour
     // --- HUD (Modo Clássico) ---
     void OnGUI()
     {
-        // Se morreu OU ganhou o jogo (pausado), esconde tudo para limpar a tela
-        if (estaMorto || jogoPausado || camaraPrincipal == null) return;
+        // <<< ALTERAÇÃO 2: Adicionei '|| Time.timeScale == 0'
+        // Se o tempo estiver parado (Pause), o HUD e a mira "O" não serão desenhados.
+        if (estaMorto || jogoPausado || Time.timeScale == 0 || camaraPrincipal == null) return;
 
         float cx = Screen.width / 2f;
         float cy = Screen.height / 2f;
@@ -225,19 +206,17 @@ public class ArcadeNave_VFinal : MonoBehaviour
             
             if (miraTela.z > 0)
             {
-                // AGORA: MESMA COR DA MIRA DO MOUSE (Branca Transparente)
                 GUI.color = new Color(1, 1, 1, 0.5f); 
                 GUI.Label(new Rect(miraTela.x - 10, Screen.height - miraTela.y - 10, 20, 20), "+");
             }
         }
 
         // --- MIRA DO MOUSE (O) ---
+        // Como colocamos o 'if' lá em cima, isso aqui não roda se estiver pausado
         GUI.color = new Color(1, 1, 1, 0.5f);
         GUI.Label(new Rect(cx + posicaoMira.x - 10, cy - posicaoMira.y - 10, 20, 20), "O");
 
         // --- RESTO DO HUD ---
-        
-        // Velocidade
         GUI.color = Color.black;
         GUI.DrawTexture(new Rect(20, 20, 160, 60), Texture2D.whiteTexture);
         GUI.color = Color.white;
@@ -246,7 +225,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
         float pctSpd = Mathf.InverseLerp(velocidadeRe, velocidadeTurbo, velocidadeAtual);
         GUI.DrawTexture(new Rect(30, 55, 140 * pctSpd, 10), Texture2D.whiteTexture);
 
-        // Vida
         GUI.color = Color.black;
         GUI.DrawTexture(new Rect(20, 90, 160, 40), Texture2D.whiteTexture);
         float pctVida = vidaAtual / vidaMaxima;
@@ -256,7 +234,6 @@ public class ArcadeNave_VFinal : MonoBehaviour
         if (GUI.skin != null) GUI.skin.label.fontSize = 14;
         GUI.Label(new Rect(35, 100, 140, 20), $"HP: {vidaAtual:F0}");
 
-        // Fragmentos
         GUI.color = Color.black;
         GUI.DrawTexture(new Rect(20, 140, 200, 30), Texture2D.whiteTexture);
         GUI.color = Color.yellow;
