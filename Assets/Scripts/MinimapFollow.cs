@@ -9,15 +9,16 @@ public class MinimapFollow : MonoBehaviour
     {
         if (player == null) return;
 
-        // 1. Segue a posição X e Z do player, mas mantém altura fixa
+        // 1. Acompanha a Posição X e Z (Ignora Y do player, mantém altura fixa)
         Vector3 novaPosicao = player.position;
-        novaPosicao.y += altura;
+        novaPosicao.y = novaPosicao.y + altura; // A câmera fica sempre X metros acima da nave
         transform.position = novaPosicao;
 
-        // 2. Acompanha a rotação Y da nave (bússola gira), mas trava X e Z
-        // Se quiser o mapa estático (Norte sempre pra cima), apague a linha abaixo.
-        Vector3 novaRotacao = transform.eulerAngles;
-        novaRotacao.y = player.eulerAngles.y; 
-        transform.eulerAngles = novaRotacao;
+        // 2. Acompanha a ROTAÇÃO Y da nave
+        // Isso faz o mapa girar. O "Norte" do mapa será a frente da nave.
+        Vector3 rotacaoAtual = transform.eulerAngles;
+        rotacaoAtual.y = player.eulerAngles.y;
+        rotacaoAtual.x = 90f; // Garante que olha pra baixo
+        transform.eulerAngles = rotacaoAtual;
     }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DifficultySetup : MonoBehaviour
 {
-    // VARIÁVEL GLOBAL (STATIC): Qualquer script pode ler isso sem precisar de link
+    // VARIÁVEL GLOBAL (STATIC)
     public static float danoGlobalInimigo = 10f;
 
     void Awake()
@@ -20,26 +20,26 @@ public class DifficultySetup : MonoBehaviour
 
         if (dificuldade == 0) // --- FÁCIL ---
         {
-            // Ajustes da Nave/Spawn
-            if (scriptNave != null) scriptNave.vidaMaxima = 1000f;
+            if (scriptNave != null) scriptNave.vidaMaxima = 1000f; // Tanque
             if (scriptSpawner != null) scriptSpawner.totalDeInimigos = 5;
 
-            // Ajuste do Dano do Inimigo
-            danoGlobalInimigo = 5f; // Tira pouco dano
+            danoGlobalInimigo = 5f; // Dano baixo
         }
         else if (dificuldade == 1) // --- NORMAL ---
         {
-            if (scriptNave != null) scriptNave.vidaMaxima = 100f;
+            if (scriptNave != null) scriptNave.vidaMaxima = 100f; // Padrão
             if (scriptSpawner != null) scriptSpawner.totalDeInimigos = 10;
 
-            danoGlobalInimigo = 10f; // Dano padrão
+            danoGlobalInimigo = 10f; // Dano médio
         }
         else if (dificuldade == 2) // --- DIFÍCIL ---
         {
-            if (scriptNave != null) scriptNave.vidaMaxima = 50f;
-            if (scriptSpawner != null) scriptSpawner.totalDeInimigos = 20;
+            if (scriptNave != null) scriptNave.vidaMaxima = 50f; // Vida Curta
+            if (scriptSpawner != null) scriptSpawner.totalDeInimigos = 20; // Muitos inimigos
 
-            danoGlobalInimigo = 25f; // Dano altíssimo (2 tiros matam no Difícil)
+            // ANTES ERA 25 (Muito alto). AGORA É 10.
+            // Motivo: Se o inimigo acertar as 4 balas (4x10=40), você ainda sobra com 10 de vida.
+            danoGlobalInimigo = 10f; 
         }
     }
 }

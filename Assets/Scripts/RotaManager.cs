@@ -142,27 +142,91 @@ public class RotaManager : MonoBehaviour
 
 
 [ContextMenu("Forcar Vitoria")]
-public void Vitoria()
+    public void Vitoria()
     {
         if (scriptNave != null) scriptNave.DesativarSistemas();
         
-        float tempoTotal = Time.time - tempoInicial;
-        float minutos = Mathf.FloorToInt(tempoTotal / 60);
-        float segundos = Mathf.FloorToInt(tempoTotal % 60);
+        float tempoTotalPartida = Time.time - tempoInicial;
 
-        if (textoTempoFinal != null) textoTempoFinal.text = string.Format("TEMPO TOTAL: {0:00}:{1:00}", minutos, segundos);
+        // --- LÓGICA DE NOVO RECORDE ---
+        // 1. Antes de salvar, vemos qual era o melhor tempo antigo (Posição 0)
+        float melhorTempoAntigo = PlayerPrefs.GetFloat("RankTempo_0", 5999f);
+        bool ehNovoRecorde = tempoTotalPartida < melhorTempoAntigo;
 
-        // Ativa a tela de fim de jogo
+        // 2. Agora salvamos o seu tempo na lista (se entrar no top 10)
+        SalvarNoTop10(tempoTotalPartida, MenuController.nomeDoJogadorAtual);
+
+        // 3. Montamos o texto
+        float minutos = Mathf.FloorToInt(tempoTotalPartida / 60);
+        float segundos = Mathf.FloorToInt(tempoTotalPartida % 60);
+
+        if (textoTempoFinal != null) 
+        {
+            textoTempoFinal.text = string.Format("PILOTO: {0}\nTEMPO: {1:00}:{2:00}", MenuController.nomeDoJogadorAtual, minutos, segundos);
+
+            // 4. Se você bateu o Top 1, mostramos a mensagem amarela!
+            if (ehNovoRecorde)
+            {
+                textoTempoFinal.text += "\n<color=yellow>NOVO RECORDE!</color>";
+            }
+        }
+
         if (telaVitoria != null) telaVitoria.SetActive(true);
-
-        // DESATIVA O HUD (Vida, Minimap, etc) PARA LIMPAR A TELA
-        if (hudPanel != null) hudPanel.SetActive(false); // <<< NOVO
+        if (hudPanel != null) hudPanel.SetActive(false);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         Time.timeScale = 0f;
     }
 
+    // --- FUNÇÃO AUXILIAR NOVA PARA O TOP 10 ---
+    void SalvarNoTop10(float tempoNovo, string nomeNovo)
+    {
+        // 1. Carrega a lista atual da memória para listas temporárias
+        List<float> tempos = new List<float>();
+        List<string> nomes = new List<string>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            // Se não tiver tempo salvo nessa posição, usa 5999 (infinito)
+            tempos.Add(PlayerPrefs.GetFloat("RankTempo_" + i, 5999f));
+            nomes.Add(PlayerPrefs.GetString("RankNome_" + i, "---"));
+        }
+
+        // 2. Adiciona o novo resultado na lista
+        tempos.Add(tempoNovo);
+        nomes.Add(nomeNovo);
+
+        // 3. Ordena a lista (Bubble Sort simples, pois são poucos itens)
+        // Precisamos ordenar os TEMPOS, mas mover os NOMES junto
+        for (int i = 0; i < tempos.Count; i++)
+        {
+            for (int j = i + 1; j < tempos.Count; j++)
+            {
+                if (tempos[j] < tempos[i]) // Se o tempo J for menor (melhor)
+                {
+                    // Troca os tempos de lugar
+                    float tempT = tempos[i];
+                    tempos[i] = tempos[j];
+                    tempos[j] = tempT;
+
+                    // Troca os nomes de lugar junto
+                    string tempN = nomes[i];
+                    nomes[i] = nomes[j];
+                    nomes[j] = tempN;
+                }
+            }
+        }
+
+        // 4. Salva apenas os 10 primeiros de volta na memória
+        for (int i = 0; i < 10; i++)
+        {
+            PlayerPrefs.SetFloat("RankTempo_" + i, tempos[i]);
+            PlayerPrefs.SetString("RankNome_" + i, nomes[i]);
+        }
+        
+        PlayerPrefs.Save();
+    }
     public void SairDoJogo()
     {
         Application.Quit();
@@ -174,7 +238,19 @@ public void Vitoria()
 
     public void VoltarAoMenu()
     {
-        Time.timeScale = 1f; // Descongela o jogo
-        SceneManager.LoadScene(nomeCenaMenu); // Carrega o menu
+        // 1. Encontra a Nave e desliga ela na hora
+        // Isso impede que o OnGUI (HUD de vida/velocidade) seja desenhado nesse último frame
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) 
+        {
+            player.SetActive(false);
+        }
+
+        // 2. Garante que o HUD do Canvas (Minimap) também fique apagado
+        if (hudPanel != null) hudPanel.SetActive(false);
+
+        // 3. Agora sim, descongelamos o tempo e trocamos de cena
+        Time.timeScale = 1f; 
+        SceneManager.LoadScene(nomeCenaMenu); 
     }
 }

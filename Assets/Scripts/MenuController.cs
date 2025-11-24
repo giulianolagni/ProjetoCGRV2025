@@ -14,69 +14,117 @@ public class MenuController : MonoBehaviour
 
     [Header("Configuração dos Botões")]
     public TextMeshProUGUI textoBotaoDificuldade;
+    public TMP_InputField campoNomeJogador; // <<< ARRASTE O INPUT FIELD AQUI
 
-    [Header("Cenas e Painéis")]
+    [Header("Ranking")]
+    public TextMeshProUGUI textoBestTime; 
+    public GameObject painelRanking;
+
+    [Header("Cenas")]
     public string nomeDaCenaDoJogo = "JogoPrincipal"; 
-    public GameObject painelRanking; 
+
+    // VARIÁVEL GLOBAL PARA GUARDAR O NOME (Para o outro script ler)
+    public static string nomeDoJogadorAtual = "Piloto";
 
     private int indiceDificuldade = 1; 
     private string[] nomesDificuldade = { "FÁCIL", "NORMAL", "DIFÍCIL" };
 
     void Start()
     {
-        // REMOVI O PlayerPrefs.DeleteAll() DAQUI POIS ELE RESETAVA TUDO SEMPRE
-        
-        if (rawImage != null)
-        {
-            rawImage.SetActive(false);
-            animatorRawImage = rawImage.GetComponent<Animator>();
-        }
+        // Intro
+        if (rawImage != null) { rawImage.SetActive(false); animatorRawImage = rawImage.GetComponent<Animator>(); }
         if (menuOpcoes != null) menuOpcoes.SetActive(false);
         if (painelRanking != null) painelRanking.SetActive(false);
 
+        // Iniciar
         if (rawImage != null) { rawImage.SetActive(true); if(animatorRawImage != null) animatorRawImage.SetTrigger("fadeIn"); }
         if (videoPlayer != null) videoPlayer.Play();
         if (menuOpcoes != null) menuOpcoes.SetActive(true);
 
-        // Carrega a dificuldade salva
+        // Carregar dados
         indiceDificuldade = PlayerPrefs.GetInt("DificuldadeJogo", 1);
         AtualizarTextoDificuldade();
+        AtualizarTextoRanking(); // Mostra o ranking atualizado
     }
 
     public void Jogar()
     {
+        // 1. SALVA O NOME ANTES DE ENTRAR NO JOGO
+        if (campoNomeJogador != null && campoNomeJogador.text.Length > 0)
+        {
+            nomeDoJogadorAtual = campoNomeJogador.text;
+        }
+        else
+        {
+            nomeDoJogadorAtual = "Piloto Anônimo";
+        }
+
         SceneManager.LoadScene(nomeDaCenaDoJogo);
     }
 
-    public void MudarDificuldade()
+public void Sair()
     {
-        indiceDificuldade++;
-        if (indiceDificuldade > 2) indiceDificuldade = 0;
+        // Limpa as 10 posições do Ranking
+        for (int i = 0; i < 10; i++)
+        {
+            PlayerPrefs.DeleteKey("RankTempo_" + i);
+            PlayerPrefs.DeleteKey("RankNome_" + i);
+        }
+        
+        // Limpa as chaves antigas se tiverem sobrado
+        PlayerPrefs.DeleteKey("MelhorTempoRanking");
+        PlayerPrefs.DeleteKey("MelhorNomeRanking");
 
-        PlayerPrefs.SetInt("DificuldadeJogo", indiceDificuldade);
-        PlayerPrefs.Save(); 
-
-        AtualizarTextoDificuldade();
-    }
-
-    public void Ranking()
-    {
-        if (painelRanking != null) painelRanking.SetActive(true);
-    }
-
-    public void Sair()
-    {
+        Debug.Log("Ranking Resetado!");
         Application.Quit();
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #endif
     }
 
+    // --- RANKING ---
+    public void AbrirRanking() { if (painelRanking != null) painelRanking.SetActive(true); }
+    public void FecharRanking() { if (painelRanking != null) painelRanking.SetActive(false); }
+
+void AtualizarTextoRanking()
+    {
+        if (textoBestTime == null) return;
+
+        textoBestTime.text = "TOP 10 PILOTOS:\n\n";
+
+        // Loop para ler as 10 posições
+        for (int i = 0; i < 10; i++)
+        {
+            float tempo = PlayerPrefs.GetFloat("RankTempo_" + i, 5999f);
+            string nome = PlayerPrefs.GetString("RankNome_" + i, "---");
+
+            if (tempo >= 5999f)
+            {
+                // Se for tempo vazio, mostra traços
+                textoBestTime.text += string.Format("{0}. {1}   --:--\n", i + 1, "---");
+            }
+            else
+            {
+                float min = Mathf.FloorToInt(tempo / 60);
+                float seg = Mathf.FloorToInt(tempo % 60);
+                // Exemplo: 1. Capitão - 01:20
+                textoBestTime.text += string.Format("{0}. {1}   {2:00}:{3:00}\n", i + 1, nome, min, seg);
+            }
+        }
+    }
+
+    // --- DIFICULDADE (Mantido Igual) ---
+    public void MudarDificuldade()
+    {
+        indiceDificuldade++;
+        if (indiceDificuldade > 2) indiceDificuldade = 0;
+        PlayerPrefs.SetInt("DificuldadeJogo", indiceDificuldade);
+        PlayerPrefs.Save(); 
+        AtualizarTextoDificuldade();
+    }
+
     void AtualizarTextoDificuldade()
     {
-        if (textoBotaoDificuldade != null)
-        {
-            textoBotaoDificuldade.text = nomesDificuldade[indiceDificuldade];
-        }
+        if (textoBotaoDificuldade != null) textoBotaoDificuldade.text = nomesDificuldade[indiceDificuldade];
     }
 }
