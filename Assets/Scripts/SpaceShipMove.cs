@@ -22,6 +22,7 @@ public class ArcadeNave_VFinal : MonoBehaviour
     [SerializeField] private Transform pontoDeTiro;
     [SerializeField] private float vidaMaxima = 100f;
     [SerializeField] private GameObject telaGameOver; 
+    [SerializeField] private GameObject hudGameObject;
     
     [Header("--- MISSÃO (FRAGMENTOS) ---")]
     public int fragmentosTotais = 5;
@@ -134,10 +135,16 @@ public class ArcadeNave_VFinal : MonoBehaviour
         if (vidaAtual <= 0) GameOver();
     }
 
-    void GameOver()
+void GameOver()
     {
         estaMorto = true;
+        
+        // Liga a tela de Game Over
         if (telaGameOver != null) telaGameOver.SetActive(true);
+        
+        // Desliga o HUD (e o Minimap junto!)
+        if (hudGameObject != null) hudGameObject.SetActive(false); // <<< ADICIONE ISSO
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         Time.timeScale = 0f;
