@@ -22,7 +22,7 @@ Um jogo de nave arcade 3D com sistema de ondas, dificuldade progressiva e rankin
 
 Confira o vídeo de demonstração do projeto:
 
-[Link da demo no YouTube](https://www.youtube.com/watch%3Fv%3DnV3DZpvSrMQ)
+[Link da demo no YouTube](https://youtu.be/nV3DZpvSrMQ)
 
 ## 📥 Download e Instalação
 
